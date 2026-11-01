@@ -62,7 +62,7 @@ async function buildApp(outDir: string, seed: string): Promise<string[]> {
 
 describe("obfuscate plugin", () => {
   before(async () => {
-    root = await mkdtemp(join(tmpdir(), "vite-plugin-obfuscate-"));
+    root = await mkdtemp(join(tmpdir(), "vite-plugin-agent-evasion-"));
     await writeProject();
   });
 
