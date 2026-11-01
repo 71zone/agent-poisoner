@@ -81,6 +81,18 @@ describe("buildDictionary", () => {
       /No usable vocabulary words/,
     );
   });
+
+  it("rejects a line that is not a word", () => {
+    assert.throws(
+      () =>
+        buildDictionary({
+          words: ["prefixes: [gold, lucky, spin, jade, red, great, new, year, silver, dragon] suffixes: [vault, wheel, chest, coin, gem, prize, luck]"],
+          size: 10,
+          seed: 1,
+        }),
+      /Check that the file extension matches its format/,
+    );
+  });
 });
 
 describe("estimateIdentifierBudget", () => {

@@ -83,6 +83,14 @@ const RESERVED_WORDS: Record<string, true> = {
 const IDENTIFIER_PATTERN = /^[a-z_$][a-z0-9_$]*$/;
 
 /**
+ * Longest accepted vocabulary entry.
+ *
+ * Identifier names are short. A longer entry means the source is not a word list:
+ * for example a YAML line read as a plain-text word list.
+ */
+const MAX_WORD_LENGTH = 48;
+
+/**
  * Normalize one vocabulary entry to a usable identifier.
  *
  * The obfuscator lowercases every dictionary entry, so normalization does too.
@@ -122,6 +130,14 @@ export function buildDictionary(options: DictionaryOptions): string[] {
 
   const add = (raw: string): void => {
     const word = normalizeWord(raw);
+
+    if (word && word.length > MAX_WORD_LENGTH) {
+      throw new Error(
+        `[vite-plugin-obfuscate] Vocabulary entry "${word.slice(0, MAX_WORD_LENGTH)}…" is ` +
+          `${word.length} characters long. Check that the file extension matches its format: ` +
+          "`.json`, `.yaml`, or a plain `.txt` word list.",
+      );
+    }
 
     if (!word) {
       rejects.push(raw);
