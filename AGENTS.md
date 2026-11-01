@@ -19,6 +19,8 @@ Shared Vite plugin that obfuscates build output for the other repositories.
 ## Guardrails
 
 - Publish `dist/`, never `src/`: consumers must not typecheck our sources.
+- Consumers read `dist/`. Run `pnpm build` after you edit `src/`, before you build a
+  consumer: a stale `dist` silently replaces vocabulary names with the old behavior.
 - Relative imports carry the `.ts` extension. Node needs it to run the sources
   and the build rewrites it to `.js`.
 - Keep obfuscation in `renderChunk`. `generateBundle` runs after chunk hashes are

@@ -8,10 +8,14 @@
 import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import type { ObfuscatorOptions } from "javascript-obfuscator";
+import { parse as parseYaml } from "yaml";
 import { obfuscateCode } from "./obfuscator.ts";
 import { type ObfuscateOptions, resolveOptions } from "./options.ts";
 import { hashString } from "./random.ts";
 import { buildDictionary, type CompoundSpec, estimateIdentifierBudget } from "./vocabulary.ts";
+
+/** YAML vocabulary files. JSON and plain word lists have their own readers. */
+const YAML_FILE = /\.ya?ml$/;
 
 export interface CoreOptions extends ObfuscateOptions {
   /** Base directory for relative vocabulary paths. Defaults to `process.cwd()`. */
@@ -30,24 +34,44 @@ interface VocabularyFile {
   compound?: CompoundSpec;
 }
 
-/** Vocabulary file contents: a `.json` document or a word list. */
+/** Vocabulary file contents: a `.json`/`.yaml` document or a word list. */
 export async function loadVocabulary(source: string, root: string): Promise<VocabularyFile> {
   const path = isAbsolute(source) ? source : resolve(root, source);
   const content = await readFile(path, "utf8");
 
   if (path.endsWith(".json")) {
-    return readJsonVocabulary(JSON.parse(content), path);
+    return readVocabularyDocument(JSON.parse(content), path);
   }
 
-  return {
-    words: content
-      .split("\n")
-      .map((line) => line.replace(/#.*/, "").trim())
-      .filter(Boolean),
-  };
+  if (YAML_FILE.test(path)) {
+    return readVocabularyDocument(parseYaml(content), path);
+  }
+
+  return { words: readWordList(content, path) };
 }
 
-function readJsonVocabulary(value: unknown, path: string): VocabularyFile {
+/** Something that belongs to JSON or YAML, not to a one-word-per-line list. */
+const STRUCTURED_LINE = /[:[\]{}]|,\s/;
+
+function readWordList(content: string, path: string): string[] {
+  return content
+    .split("\n")
+    .map((line) => line.replace(/#.*/, "").trim())
+    .filter(Boolean)
+    .map((entry) => {
+      if (STRUCTURED_LINE.test(entry)) {
+        throw new Error(
+          `${path}: line "${entry.slice(0, 40)}" looks like JSON or YAML. ` +
+            "Name the file .json or .yaml, or list one word per line.",
+        );
+      }
+
+      return entry;
+    });
+}
+
+/** One document shape for both formats: a word list, or words plus compounds. */
+function readVocabularyDocument(value: unknown, path: string): VocabularyFile {
   if (Array.isArray(value)) {
     return { words: readWords(value, path) };
   }

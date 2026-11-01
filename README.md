@@ -27,31 +27,49 @@ import { obfuscate } from "@71zone/vite-plugin-obfuscate";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [obfuscate({ vocabulary: "obfuscate.vocabulary.json" })],
+  plugins: [obfuscate({ vocabulary: "obfuscate.vocabulary.yaml" })],
 });
 ```
 
-```json
-// obfuscate.vocabulary.json
-{
-  "words": ["vault", "spin", "luck", "gold"],
-  "compound": {
-    "prefixes": ["gold", "lucky"],
-    "suffixes": ["vault", "wheel"]
-  }
-}
+```yaml
+# obfuscate.vocabulary.yaml
+words:
+  - vault
+  - spin
+  - luck
+  - gold
+
+compound:
+  prefixes: [gold, lucky]
+  suffixes: [vault, wheel]
 ```
 
 Words become identifiers such as `goldvault` or `spin`, and compound pools grow
 the list to `goldvault`, `goldwheel`, `luckyvault`, `luckywheel`. The plugin
 extends the list further with numeric suffixes when a chunk needs more names.
 
+## Vocabulary file
+
+`vocabulary` accepts three shapes:
+
+- Inline words: `vocabulary: ["vault", "spin"]`.
+- `.yaml` or `.yml`: the document above, or a bare list (`- vault`).
+- `.json`: the same document, or a bare array.
+- `.txt`: one word per line. `#` starts a comment.
+
+Words are lowercased, and spaces and punctuation are stripped, so `Gold Coin`
+becomes `goldcoin`. Duplicates are dropped. Reserved words (`class`, `const`, …)
+and entries longer than 48 characters stop the build with an error.
+
+Locals, parameters, and, with `renameGlobals: true`, top-level bindings take the
+vocabulary names. Everything else keeps its name.
+
 ## Options
 
 | Option | Default | Meaning |
 |:---|:---|:---|
 | `enabled` | `true` | Turn the plugin off without removing it. |
-| `vocabulary` | none | Inline words, or a path to `.json` (array or `{ words, compound }`) or `.txt` (one word per line). |
+| `vocabulary` | none | Inline words, or a path to `.json`/`.yaml` (array or `{ words, compound }`) or `.txt` (one word per line). |
 | `compound` | `false` | Compound word pools; overrides the pool from the vocabulary file. |
 | `hexShare` | `0.25` | Share of classic `_0x…` names mixed into the vocabulary. |
 | `minDictionarySize` | `512` | Lower bound for the per-chunk dictionary. |
