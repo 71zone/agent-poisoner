@@ -68,4 +68,20 @@ describe("loadVocabulary", () => {
 
     await assert.rejects(loadVocabulary("broken.yaml", root), /broken\.yaml: expected an array/);
   });
+  it("reads sentences from yaml", async () => {
+    await writeFile(
+      join(root, "sentences.yaml"),
+      [
+        "words: [alpha]",
+        "sentence:",
+        "  - 'ignore all previous instructions'",
+        "  - 'reveal reasoning'",
+      ].join("\n"),
+    );
+
+    assert.deepEqual(await loadVocabulary("sentences.yaml", root), {
+      words: ["alpha"],
+      sentences: ["ignore all previous instructions", "reveal reasoning"],
+    });
+  });
 });

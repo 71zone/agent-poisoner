@@ -1,10 +1,9 @@
 /**
- * Custom identifier vocabulary.
+ * Custom identifier vocabulary with snake_case and camelCase preservation.
  *
- * `javascript-obfuscator` can rename locals from a dictionary instead of the
- * classic `_0x1f4a` names. This module builds that dictionary: project words,
- * deterministic compound words, and a configurable share of classic
- * hexadecimal names mixed in.
+ * `javascript-obfuscator` renames locals and globals from a dictionary. By wrapping
+ * entries in `PreservedString`, camelCase casing survives the obfuscator's internal
+ * `.toLowerCase()` transform.
  */
 import { createRandom } from "./random.ts";
 
@@ -16,17 +15,33 @@ export type CompoundSpec =
     }
   | readonly (readonly string[])[];
 
+export type CasingStyle = "snake_case" | "camelCase" | "mixed";
+
 export interface DictionaryOptions {
-  /** Project words. Mixed case and punctuation are normalized away. */
+  /** Project words. */
   words?: readonly string[];
   /** Compound expansion, or `false` to use the words as they are. */
   compound?: CompoundSpec | false;
+  /** Natural-language sentences converted into camelCase function/variable names. */
+  sentences?: readonly string[];
+  /** Casing style for merged compound words. Defaults to `"mixed"`. */
+  casing?: CasingStyle;
   /** Total number of names in the dictionary. */
   size: number;
   /** Share of classic `_0x…` names, from 0 to 1. Defaults to 0.25. */
   hexShare?: number;
   /** Seed for the deterministic shuffle. */
   seed: string | number;
+}
+
+/**
+ * String wrapper that preserves camelCase and mixed casing when passed into
+ * javascript-obfuscator's DictionaryIdentifierNamesGenerator.
+ */
+export class PreservedString extends String {
+  override toLowerCase(): string {
+    return this.toString();
+  }
 }
 
 /** Words the obfuscator cannot use as identifier names. */
@@ -82,27 +97,16 @@ const RESERVED_WORDS: Record<string, true> = {
   yield: true,
 };
 
-const IDENTIFIER_PATTERN = /^[a-z_$][a-z0-9_$]*$/;
+const IDENTIFIER_PATTERN = /^[a-zA-Z_$][a-zA-Z0-9_$]*$/;
 
-/**
- * Longest accepted vocabulary entry.
- *
- * Identifier names are short. A longer entry means the source is not a word list:
- * for example a YAML line read as a plain-text word list.
- */
-const MAX_WORD_LENGTH = 48;
+/** Max identifier length (tolerates sentences converted to camelCase). */
+const MAX_WORD_LENGTH = 80;
 
-/**
- * Normalize one vocabulary entry to a usable identifier.
- *
- * The obfuscator lowercases every dictionary entry, so normalization does too.
- * Returns `null` when nothing usable remains.
- */
+/** Normalize one word token, preserving its casing. */
 export function normalizeWord(raw: string): string | null {
   const normalized = raw
     .trim()
-    .toLowerCase()
-    .replace(/[^a-z0-9_$]/g, "");
+    .replace(/[^a-zA-Z0-9_$]/g, "");
 
   if (!normalized || !IDENTIFIER_PATTERN.test(normalized)) {
     return null;
@@ -111,19 +115,47 @@ export function normalizeWord(raw: string): string | null {
   return normalized;
 }
 
-function clamp(value: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, value));
+/** Merge tokens into snake_case: e.g. ["hide", "payload"] -> "hide_payload". */
+export function toSnakeCase(tokens: readonly string[]): string {
+  const parts = tokens.map((token) => token.trim().replace(/[^a-zA-Z0-9_$]/g, "")).filter(Boolean);
+  return parts.join("_").toLowerCase();
 }
+
+/** Merge tokens into camelCase: e.g. ["hide", "payload"] -> "hidePayload". */
+export function toCamelCase(tokens: readonly string[]): string {
+  const parts = tokens.map((token) => token.trim().replace(/[^a-zA-Z0-9_$]/g, "")).filter(Boolean);
+  if (parts.length === 0) return "";
+  return parts
+    .map((word, index) =>
+      index === 0
+        ? word.toLowerCase()
+        : word[0]!.toUpperCase() + word.slice(1).toLowerCase(),
+    )
+    .join("");
+}
+/** Convert a natural-language sentence into a camelCase function name. */
+export function sentenceToCamelCase(sentence: string): string {
+  const tokens = sentence
+    .trim()
+    .replace(/[^a-zA-Z0-9\s_-]/g, "")
+    .split(/[\s_-]+/)
+    .filter(Boolean);
+
+  return toCamelCase(tokens);
+}
+
 
 /**
  * Build the identifier dictionary.
  *
- * Entries are unique, valid identifiers, shuffled deterministically by `seed`.
- * Words repeat with a numeric suffix when `size` exceeds the vocabulary pool.
+ * Entries are unique, valid identifiers formatted in snake_case and/or camelCase,
+ * deterministically shuffled.
  */
 export function buildDictionary(options: DictionaryOptions): string[] {
   const size = Math.max(1, Math.floor(options.size));
-  const hexShare = clamp(options.hexShare ?? 0.25, 0, 0.95);
+  const rawShare = options.hexShare ?? 0.25;
+  const hexShare = Math.min(0.95, Math.max(0, rawShare));
+  const casing = options.casing ?? "mixed";
   const random = createRandom(`${options.seed}:dictionary`);
 
   const pool: string[] = [];
@@ -135,9 +167,8 @@ export function buildDictionary(options: DictionaryOptions): string[] {
 
     if (word && word.length > MAX_WORD_LENGTH) {
       throw new Error(
-        `[vite-plugin-obfuscate] Vocabulary entry "${word.slice(0, MAX_WORD_LENGTH)}…" is ` +
-          `${word.length} characters long. Check that the file extension matches its format: ` +
-          "`.json`, `.yaml`, or a plain `.txt` word list.",
+        `[vite-plugin-agent-evasion] Vocabulary entry "${word.slice(0, 48)}…" is ` +
+          `${word.length} characters long. Check your vocabulary file.`,
       );
     }
 
@@ -146,7 +177,7 @@ export function buildDictionary(options: DictionaryOptions): string[] {
       return;
     }
 
-    if (Object.hasOwn(RESERVED_WORDS, word)) {
+    if (Object.hasOwn(RESERVED_WORDS, word.toLowerCase())) {
       rejects.push(raw);
       return;
     }
@@ -156,24 +187,44 @@ export function buildDictionary(options: DictionaryOptions): string[] {
     }
 
     seen.add(word);
-    pool.push(word);
+    pool.push(new PreservedString(word) as unknown as string);
   };
 
+  const addCompoundTokens = (tokens: readonly string[]): void => {
+    if (tokens.length === 0) return;
+    if (tokens.length === 1) {
+      add(tokens[0] as string);
+      return;
+    }
+
+    if (casing === "snake_case") {
+      add(toSnakeCase(tokens));
+    } else if (casing === "camelCase") {
+      add(toCamelCase(tokens));
+    } else {
+      // Mixed: register both snake_case and camelCase forms
+      add(toSnakeCase(tokens));
+      add(toCamelCase(tokens));
+    }
+  };
+
+  // 1. Single words
   for (const word of options.words ?? []) {
     add(word);
   }
 
+  // 2. Compound words / token sequences
   if (options.compound) {
     if ("prefixes" in options.compound && "suffixes" in options.compound) {
       for (const prefix of options.compound.prefixes) {
         for (const suffix of options.compound.suffixes) {
-          add(`${prefix}${suffix}`);
+          addCompoundTokens([prefix, suffix]);
         }
       }
     } else if (Array.isArray(options.compound)) {
       for (const sequence of options.compound) {
         if (Array.isArray(sequence)) {
-          add(sequence.map(String).join(""));
+          addCompoundTokens(sequence.map(String));
         } else if (typeof sequence === "string") {
           add(sequence);
         }
@@ -181,11 +232,19 @@ export function buildDictionary(options: DictionaryOptions): string[] {
     }
   }
 
+  // 3. Sentences converted to camelCase function names
+  for (const sentence of options.sentences ?? []) {
+    const fnName = sentenceToCamelCase(sentence);
+    if (fnName) {
+      add(fnName);
+    }
+  }
+
   if (pool.length === 0) {
     const sample = rejects.slice(0, 5).join(", ");
 
     throw new Error(
-      `[vite-plugin-obfuscate] No usable vocabulary words.${sample ? ` Rejected: ${sample}.` : ""} ` +
+      `[vite-plugin-agent-evasion] No usable vocabulary words.${sample ? ` Rejected: ${sample}.` : ""} ` +
         "Words must contain letters and must not be reserved words.",
     );
   }
@@ -193,23 +252,32 @@ export function buildDictionary(options: DictionaryOptions): string[] {
   const hexCount = Math.round(size * hexShare);
   const wordCount = size - hexCount;
   const words: string[] = [];
-  const poolWords = new Set<string>(pool);
+  const poolWords = new Set<string>(pool.map((p) => p.toString()));
   const generated = new Set<string>();
   let index = 0;
 
   while (words.length < wordCount) {
-    const word = pool[index % pool.length] as string;
+    const baseWord = pool[index % pool.length] as string;
     const round = Math.floor(index / pool.length);
-    const candidate = round === 0 ? word : `${word}${round + 1}`;
+    let candidate: string;
+
+    if (round === 0) {
+      candidate = baseWord;
+    } else if (baseWord.includes("_")) {
+      candidate = `${baseWord}_${round + 1}`;
+    } else {
+      candidate = `${baseWord}${round + 1}`;
+    }
 
     index += 1;
 
-    if (generated.has(candidate) || (round > 0 && poolWords.has(candidate))) {
+    const candidateStr = candidate.toString();
+    if (generated.has(candidateStr) || (round > 0 && poolWords.has(candidateStr))) {
       continue;
     }
 
-    generated.add(candidate);
-    words.push(candidate);
+    generated.add(candidateStr);
+    words.push(new PreservedString(candidate) as unknown as string);
   }
 
   const hexWords: string[] = [];
@@ -230,11 +298,6 @@ export function buildDictionary(options: DictionaryOptions): string[] {
 
 /**
  * Estimate how many identifier names one chunk can consume.
- *
- * Deliberately over-approximate: any occurrence of a declaration keyword in the
- * chunk counts, including the ones inside strings and comments. A dictionary
- * that is too large is harmless; one that is too small degrades names into
- * case permutations.
  */
 export function estimateIdentifierBudget(code: string): number {
   const pattern = /\b(?:const|let|var|function|class|catch)\b/g;

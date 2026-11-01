@@ -1,24 +1,29 @@
 /**
- * Vite plugin: obfuscate emitted chunks with `javascript-obfuscator`, using a
- * custom identifier vocabulary mixed with classic `_0x…` names.
- *
- * The plugin runs only for `vite build`. It turns off the bundler minifier,
- * because a minifier running after the obfuscator renames every identifier it
- * just produced.
+ * Vite plugin for LLM agent evasion: obfuscates emitted chunks with
+ * custom snake_case/camelCase vocabulary, uglifies expressions, and injects
+ * sentences as function names and code comments.
  */
 import type { Plugin, ResolvedConfig } from "vite";
 import { type ChunkObfuscator, createObfuscator } from "./core.ts";
 import { type ChunkFilter, type ObfuscateOptions, resolveOptions } from "./options.ts";
 
 export type { ChunkFilter, ObfuscateOptions, VocabularySource } from "./options.ts";
-export type { CompoundSpec } from "./vocabulary.ts";
+export type { CasingStyle, CompoundSpec } from "./vocabulary.ts";
 export type { ChunkObfuscator, CoreOptions } from "./core.ts";
 export { createObfuscator, loadVocabulary } from "./core.ts";
 export { obfuscateCode } from "./obfuscator.ts";
 export { DEFAULT_OBFUSCATOR_OPTIONS } from "./options.ts";
-export { buildDictionary, estimateIdentifierBudget, normalizeWord } from "./vocabulary.ts";
+export {
+  buildDictionary,
+  estimateIdentifierBudget,
+  normalizeWord,
+  sentenceToCamelCase,
+  toCamelCase,
+  toSnakeCase,
+} from "./vocabulary.ts";
+export { injectRandomComments } from "./comments.ts";
 
-const PLUGIN_NAME = "@71zone/vite-plugin-obfuscate";
+const PLUGIN_NAME = "@71zone/vite-plugin-agent-evasion";
 const LOG_PREFIX = `[${PLUGIN_NAME}]`;
 
 /** Matches emitted JavaScript, and nothing else. */
@@ -59,7 +64,9 @@ function createLimiter(max: number): <T>(task: () => Promise<T>) => Promise<T> {
 
   return async <T>(task: () => Promise<T>): Promise<T> => {
     if (active >= max) {
-      await new Promise<void>((resolveWaiting) => waiting.push(resolveWaiting));
+      const { promise, resolve } = Promise.withResolvers<void>();
+      waiting.push(resolve);
+      await promise;
     }
 
     active += 1;
@@ -73,8 +80,8 @@ function createLimiter(max: number): <T>(task: () => Promise<T>) => Promise<T> {
   };
 }
 
-/** The plugin. Pass options to set the vocabulary and the obfuscation strength. */
-export function obfuscate(options: ObfuscateOptions = {}): Plugin {
+/** The plugin. Pass options to set the vocabulary and evasion settings. */
+export function agentEvasion(options: ObfuscateOptions = {}): Plugin {
   const settings = resolveOptions(options);
   const limit = createLimiter(settings.concurrency);
   let config: ResolvedConfig | undefined;
@@ -163,4 +170,7 @@ export function obfuscate(options: ObfuscateOptions = {}): Plugin {
   };
 }
 
-export default obfuscate;
+/** Backward-compatible alias for agentEvasion. */
+export const obfuscate = agentEvasion;
+
+export default agentEvasion;

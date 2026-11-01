@@ -1,17 +1,14 @@
 /**
- * Build-tool agnostic obfuscation core.
- *
- * The Vite plugin is a thin adapter around `createObfuscator`, so other build
- * tools (wrangler, esbuild, a release script) can reuse the same vocabulary,
- * seed, and option assembly.
+ * Build-tool agnostic obfuscation core with agent evasion and uglification.
  */
 import { readFile } from "node:fs/promises";
 import { isAbsolute, resolve } from "node:path";
 import type { ObfuscatorOptions } from "javascript-obfuscator";
 import { parse as parseYaml } from "yaml";
+import { injectRandomComments } from "./comments.ts";
 import { obfuscateCode } from "./obfuscator.ts";
 import { type ObfuscateOptions, resolveOptions } from "./options.ts";
-import { hashString } from "./random.ts";
+import { createRandom, hashString } from "./random.ts";
 import { buildDictionary, type CompoundSpec, estimateIdentifierBudget } from "./vocabulary.ts";
 
 /** YAML vocabulary files. JSON and plain word lists have their own readers. */
@@ -32,6 +29,7 @@ export interface ChunkObfuscator {
 interface VocabularyFile {
   words?: readonly string[];
   compound?: CompoundSpec;
+  sentences?: readonly string[];
 }
 
 /** Vocabulary file contents: a `.json`/`.yaml` document or a word list. */
@@ -70,14 +68,14 @@ function readWordList(content: string, path: string): string[] {
     });
 }
 
-/** One document shape for both formats: a word list, or words plus compounds. */
+/** One document shape for both formats: word list, compounds, or sentences. */
 function readVocabularyDocument(value: unknown, path: string): VocabularyFile {
   if (Array.isArray(value)) {
     return { words: readWords(value, path) };
   }
 
   if (typeof value !== "object" || value === null) {
-    throw new Error(`${path} must hold a word list or an object with "words" and "compound".`);
+    throw new Error(`${path} must hold a word list or an object with "words", "compound", or "sentence".`);
   }
 
   const file: VocabularyFile = {};
@@ -88,6 +86,14 @@ function readVocabularyDocument(value: unknown, path: string): VocabularyFile {
 
   if ("compound" in value && value.compound !== undefined) {
     file.compound = readCompound(value.compound, path);
+  }
+
+  if ("sentence" in value && value.sentence !== undefined) {
+    file.sentences = readSentences(value.sentence, path);
+  }
+
+  if ("sentences" in value && value.sentences !== undefined) {
+    file.sentences = [...(file.sentences ?? []), ...readSentences(value.sentences, path)];
   }
 
   return file;
@@ -105,6 +111,26 @@ function readWords(value: unknown, path: string): string[] {
 
     return entry;
   });
+}
+
+function readSentences(value: unknown, path: string): string[] {
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    return trimmed ? [trimmed] : [];
+  }
+
+  if (Array.isArray(value)) {
+    return value
+      .map((entry) => {
+        if (typeof entry !== "string") {
+          throw new Error(`${path}: every sentence must be a string.`);
+        }
+        return entry.trim();
+      })
+      .filter(Boolean);
+  }
+
+  throw new Error(`${path}: "sentence" must be a string or array of strings.`);
 }
 
 function readCompound(value: unknown, path: string): CompoundSpec {
@@ -136,9 +162,6 @@ function readCompound(value: unknown, path: string): CompoundSpec {
 
 /**
  * Create an obfuscator bound to one vocabulary and option set.
- *
- * The returned function is safe to call concurrently; dictionaries are cached
- * per chunk size. Output is deterministic for the same code and options.
  */
 export function createObfuscator(options: CoreOptions = {}): ChunkObfuscator {
   const settings = resolveOptions(options);
@@ -164,10 +187,11 @@ export function createObfuscator(options: CoreOptions = {}): ChunkObfuscator {
     const file = await readVocabulary();
     const words = file.words ?? [];
     const compound = settings.compound !== false ? settings.compound : (file.compound ?? false);
+    const sentences = [...(file.sentences ?? []), ...(settings.sentences ?? [])];
     const seed =
       settings.seed ??
       settings.obfuscatorOptions.seed ??
-      hashString(`${words.join(",")}|${JSON.stringify(compound)}`);
+      hashString(`${words.join(",")}|${JSON.stringify(compound)}|${sentences.join(",")}`);
     const estimate = estimateIdentifierBudget(code);
     const size = Math.min(settings.maxDictionarySize, Math.max(settings.minDictionarySize, estimate));
 
@@ -181,7 +205,15 @@ export function createObfuscator(options: CoreOptions = {}): ChunkObfuscator {
     let dictionary = dictionaries.get(size);
 
     if (!dictionary) {
-      dictionary = buildDictionary({ words, compound, size, hexShare: settings.hexShare, seed });
+      dictionary = buildDictionary({
+        words,
+        compound,
+        sentences,
+        casing: settings.casing,
+        size,
+        hexShare: settings.hexShare,
+        seed,
+      });
       dictionaries.set(size, dictionary);
     }
 
@@ -194,6 +226,17 @@ export function createObfuscator(options: CoreOptions = {}): ChunkObfuscator {
       ...(useDictionary ? { identifiersDictionary: dictionary } : {}),
     };
 
-    return obfuscateCode(code, obfuscatorOptions);
+    let obfuscated = await obfuscateCode(code, obfuscatorOptions);
+
+    if (settings.injectComments && sentences.length > 0) {
+      obfuscated = injectRandomComments(
+        obfuscated,
+        sentences,
+        createRandom(`${seed}:comments`),
+        settings.commentFrequency,
+      );
+    }
+
+    return obfuscated;
   };
 }

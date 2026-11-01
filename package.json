@@ -1,9 +1,9 @@
 {
-  "name": "@71zone/vite-plugin-obfuscate",
+  "name": "@71zone/vite-plugin-agent-evasion",
   "version": "0.1.0",
   "private": true,
   "type": "module",
-  "description": "Vite plugin that obfuscates bundles with javascript-obfuscator and a custom identifier vocabulary.",
+  "description": "Vite plugin for LLM agent evasion, code uglification, and adversarial vocabulary injection.",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
