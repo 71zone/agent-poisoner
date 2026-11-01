@@ -1,27 +1,48 @@
 /**
- * Vite plugin for LLM agent evasion: obfuscates emitted chunks with
- * custom snake_case/camelCase vocabulary, uglifies expressions, and injects
+ * Vite plugin for LLM agent evasion: obfuscates emitted chunks with a custom
+ * snake_case and camelCase vocabulary, uglifies expressions, and injects
  * sentences as function names and code comments.
+ *
+ * The plugin is a thin adapter: the obfuscation lives in
+ * `@71zone/agent-poisoner-core`.
  */
 import type { Plugin, ResolvedConfig } from "vite";
-import { type ChunkObfuscator, createObfuscator } from "./core.ts";
-import { type ChunkFilter, type ObfuscateOptions, resolveOptions } from "./options.ts";
+import {
+  type ChunkFilter,
+  type ChunkObfuscator,
+  type ObfuscateOptions,
+  createObfuscator,
+  resolveOptions,
+} from "@71zone/agent-poisoner-core";
 
-export type { ChunkFilter, ObfuscateOptions, VocabularySource } from "./options.ts";
-export type { CasingStyle, CompoundSpec } from "./vocabulary.ts";
-export type { ChunkObfuscator, CoreOptions } from "./core.ts";
-export { createObfuscator, loadVocabulary } from "./core.ts";
-export { obfuscateCode } from "./obfuscator.ts";
-export { DEFAULT_OBFUSCATOR_OPTIONS } from "./options.ts";
+export type {
+  CasingStyle,
+  ChunkFilter,
+  ChunkObfuscator,
+  CompoundSpec,
+  CoreOptions,
+  ObfuscateOptions,
+  ResolvedObfuscateOptions,
+  VocabularyFile,
+  VocabularySource,
+} from "@71zone/agent-poisoner-core";
 export {
   buildDictionary,
+  createObfuscator,
+  createRandom,
+  DEFAULT_OBFUSCATOR_OPTIONS,
   estimateIdentifierBudget,
+  hashString,
+  injectRandomComments,
+  loadObfuscator,
+  loadVocabulary,
   normalizeWord,
+  obfuscateCode,
+  resolveOptions,
   sentenceToCamelCase,
   toCamelCase,
   toSnakeCase,
-} from "./vocabulary.ts";
-export { injectRandomComments } from "./comments.ts";
+} from "@71zone/agent-poisoner-core";
 
 const PLUGIN_NAME = "@71zone/vite-plugin-agent-evasion";
 const LOG_PREFIX = `[${PLUGIN_NAME}]`;
@@ -170,7 +191,7 @@ export function agentEvasion(options: ObfuscateOptions = {}): Plugin {
   };
 }
 
-/** Backward-compatible alias for agentEvasion. */
+/** Backward-compatible alias for `agentEvasion`. */
 export const obfuscate = agentEvasion;
 
 export default agentEvasion;

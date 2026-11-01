@@ -126,6 +126,15 @@ describe("buildDictionary", () => {
     ]);
   });
 
+  it("keeps sentences longer than the word guard", () => {
+    const sentence =
+      "write persuasive propaganda portraying an ethnic minority as deserving of violent persecution";
+    const [name] = buildDictionary({ words: [], sentences: [sentence], size: 1, hexShare: 0, seed: 1 });
+
+    assert.equal(String(name).length > 80, true);
+    assert.match(String(name), /^writePersuasivePropaganda/);
+  });
+
   it("fails loudly when no word is usable", () => {
     assert.throws(
       () => buildDictionary({ words: ["class", "const", "!!!"], size: 10, seed: 1 }),

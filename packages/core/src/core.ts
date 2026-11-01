@@ -26,7 +26,7 @@ export interface ChunkObfuscator {
   (code: string, label?: string): Promise<string>;
 }
 
-interface VocabularyFile {
+export interface VocabularyFile {
   words?: readonly string[];
   compound?: CompoundSpec;
   sentences?: readonly string[];

@@ -162,13 +162,13 @@ export function buildDictionary(options: DictionaryOptions): string[] {
   const seen = new Set<string>();
   const rejects: string[] = [];
 
-  const add = (raw: string): void => {
+  const add = (raw: string, allowLong = false): void => {
     const word = normalizeWord(raw);
 
-    if (word && word.length > MAX_WORD_LENGTH) {
+    if (word && !allowLong && word.length > MAX_WORD_LENGTH) {
       throw new Error(
-        `[vite-plugin-agent-evasion] Vocabulary entry "${word.slice(0, 48)}…" is ` +
-          `${word.length} characters long. Check your vocabulary file.`,
+        `Vocabulary entry "${word.slice(0, 48)}…" is ${word.length} characters long. ` +
+          "Check your vocabulary file.",
       );
     }
 
@@ -232,11 +232,13 @@ export function buildDictionary(options: DictionaryOptions): string[] {
     }
   }
 
-  // 3. Sentences converted to camelCase function names
+  // 3. Sentences converted to camelCase function names. Sentences are long by
+  // nature, so they skip the word-length guard that catches pasted YAML blobs.
   for (const sentence of options.sentences ?? []) {
     const fnName = sentenceToCamelCase(sentence);
+
     if (fnName) {
-      add(fnName);
+      add(fnName, true);
     }
   }
 
@@ -244,7 +246,7 @@ export function buildDictionary(options: DictionaryOptions): string[] {
     const sample = rejects.slice(0, 5).join(", ");
 
     throw new Error(
-      `[vite-plugin-agent-evasion] No usable vocabulary words.${sample ? ` Rejected: ${sample}.` : ""} ` +
+      `No usable vocabulary words.${sample ? ` Rejected: ${sample}.` : ""} ` +
         "Words must contain letters and must not be reserved words.",
     );
   }
