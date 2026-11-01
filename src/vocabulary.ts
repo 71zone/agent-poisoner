@@ -8,11 +8,13 @@
  */
 import { createRandom } from "./random.ts";
 
-/** Two word pools whose cross product grows the vocabulary. */
-export interface CompoundSpec {
-  prefixes: readonly string[];
-  suffixes: readonly string[];
-}
+/** Two word pools whose cross product grows the vocabulary, or explicit token sequences. */
+export type CompoundSpec =
+  | {
+      prefixes: readonly string[];
+      suffixes: readonly string[];
+    }
+  | readonly (readonly string[])[];
 
 export interface DictionaryOptions {
   /** Project words. Mixed case and punctuation are normalized away. */
@@ -162,9 +164,19 @@ export function buildDictionary(options: DictionaryOptions): string[] {
   }
 
   if (options.compound) {
-    for (const prefix of options.compound.prefixes) {
-      for (const suffix of options.compound.suffixes) {
-        add(`${prefix}${suffix}`);
+    if ("prefixes" in options.compound && "suffixes" in options.compound) {
+      for (const prefix of options.compound.prefixes) {
+        for (const suffix of options.compound.suffixes) {
+          add(`${prefix}${suffix}`);
+        }
+      }
+    } else if (Array.isArray(options.compound)) {
+      for (const sequence of options.compound) {
+        if (Array.isArray(sequence)) {
+          add(sequence.map(String).join(""));
+        } else if (typeof sequence === "string") {
+          add(sequence);
+        }
       }
     }
   }

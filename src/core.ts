@@ -108,12 +108,24 @@ function readWords(value: unknown, path: string): string[] {
 }
 
 function readCompound(value: unknown, path: string): CompoundSpec {
+  if (Array.isArray(value)) {
+    return value.map((entry) => {
+      if (Array.isArray(entry)) {
+        return entry.map((item) => String(item));
+      }
+      if (typeof entry === "string") {
+        return [entry];
+      }
+      throw new Error(`${path}: compound sequence entry must be an array of tokens or a string.`);
+    });
+  }
+
   if (typeof value !== "object" || value === null) {
-    throw new Error(`${path}: "compound" must be an object with prefixes and suffixes.`);
+    throw new Error(`${path}: "compound" must be a list of token sequences or an object with prefixes and suffixes.`);
   }
 
   if (!("prefixes" in value) || !("suffixes" in value)) {
-    throw new Error(`${path}: "compound" needs both prefixes and suffixes.`);
+    throw new Error(`${path}: "compound" needs both prefixes and suffixes, or a list of token sequences.`);
   }
 
   return {

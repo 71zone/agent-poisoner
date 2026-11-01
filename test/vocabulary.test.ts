@@ -74,6 +74,20 @@ describe("buildDictionary", () => {
     assert.deepEqual(compound, ["goldvault", "goldwheel", "spinvault", "spinwheel"]);
     assert.equal(dictionary.length, 3);
   });
+  it("accepts token sequence arrays in compound", () => {
+    const dictionary = buildDictionary({
+      words: [],
+      compound: [
+        ["alpha", "beta"],
+        ["gamma", "delta"],
+      ],
+      size: 2,
+      hexShare: 0,
+      seed: 1,
+    }).sort();
+
+    assert.deepEqual(dictionary, ["alphabeta", "gammadelta"]);
+  });
 
   it("fails loudly when no word is usable", () => {
     assert.throws(
