@@ -1,5 +1,5 @@
 {
-  "name": "@71zone/agent-poisoner-vocabulary",
+  "name": "@71z/agent-poisoner-vocabulary",
   "version": "0.1.0",
   "description": "Default adversarial vocabulary for agent-poisoner: words, compound sequences, and sentences.",
   "license": "MIT",

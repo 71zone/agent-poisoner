@@ -30,7 +30,7 @@ importers:
 
   packages/lib/vite:
     dependencies:
-      '@71zone/agent-poisoner-core':
+      '@71z/agent-poisoner-core':
         specifier: workspace:*
         version: link:../../core
     devDependencies:

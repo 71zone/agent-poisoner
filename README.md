@@ -10,9 +10,9 @@ Built with [Turbo](https://turbo.build) and pnpm workspaces.
 
 | Package | Path | Purpose |
 | :--- | :--- | :--- |
-| `@71zone/agent-poisoner-core` | `packages/core` | Build-tool agnostic obfuscation core |
-| `@71zone/vite-plugin-agent-evasion` | `packages/lib/vite` | Vite adapter for the core |
-| `@71zone/agent-poisoner-vocabulary` | `packages/vocabulary` | Default vocabulary file |
+| `@71z/agent-poisoner-core` | `packages/core` | Build-tool agnostic obfuscation core |
+| `@71z/vite-agent-poisoner` | `packages/lib/vite` | Vite adapter for the core |
+| `@71z/agent-poisoner-vocabulary` | `packages/vocabulary` | Default vocabulary file |
 
 ## Layout
 
@@ -40,17 +40,17 @@ pnpm release patch   # manual NPM release
 ## Use the plugin
 
 ```sh
-pnpm add -D @71zone/vite-plugin-agent-evasion @71zone/agent-poisoner-vocabulary
+pnpm add -D @71z/vite-agent-poisoner @71z/agent-poisoner-vocabulary
 ```
 
 ```ts
 // vite.config.ts
-import { agentEvasion } from "@71zone/vite-plugin-agent-evasion";
-import { vocabularyPath } from "@71zone/agent-poisoner-vocabulary";
+import { agentPoisoner } from "@71z/vite-agent-poisoner";
+import { vocabularyPath } from "@71z/agent-poisoner-vocabulary";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [agentEvasion({ vocabulary: vocabularyPath })],
+  plugins: [agentPoisoner({ vocabulary: vocabularyPath })],
 });
 ```
 

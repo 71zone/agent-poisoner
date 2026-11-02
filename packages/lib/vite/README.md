@@ -1,29 +1,29 @@
-# @71zone/vite-plugin-agent-evasion
+# @71z/vite-agent-poisoner
 
 Vite plugin for LLM agent evasion. It obfuscates emitted chunks with an
 adversarial vocabulary, uglifies expressions, and injects sentences as function
 names and code comments.
 
 The plugin is a thin adapter. All obfuscation runs in
-[`@71zone/agent-poisoner-core`](../core/README.md).
+[`@71z/agent-poisoner-core`](../core/README.md).
 
 ## Install
 
 ```sh
-pnpm add -D @71zone/vite-plugin-agent-evasion @71zone/agent-poisoner-vocabulary
+pnpm add -D @71z/vite-agent-poisoner @71z/agent-poisoner-vocabulary
 ```
 
 ## Use
 
 ```ts
 // vite.config.ts
-import { agentEvasion } from "@71zone/vite-plugin-agent-evasion";
-import { vocabularyPath } from "@71zone/agent-poisoner-vocabulary";
+import { agentPoisoner } from "@71z/vite-agent-poisoner";
+import { vocabularyPath } from "@71z/agent-poisoner-vocabulary";
 import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
-    agentEvasion({
+    agentPoisoner({
       vocabulary: vocabularyPath,
       // One entry chunk, nothing imports its names: rename top-level functions too.
       obfuscatorOptions: { renameGlobals: true },

@@ -4,7 +4,7 @@
  * sentences as function names and code comments.
  *
  * The plugin is a thin adapter: the obfuscation lives in
- * `@71zone/agent-poisoner-core`.
+ * `@71z/agent-poisoner-core`.
  */
 import type { Plugin, ResolvedConfig } from "vite";
 import {
@@ -13,7 +13,7 @@ import {
   type ObfuscateOptions,
   createObfuscator,
   resolveOptions,
-} from "@71zone/agent-poisoner-core";
+} from "@71z/agent-poisoner-core";
 
 export type {
   CasingStyle,
@@ -25,7 +25,7 @@ export type {
   ResolvedObfuscateOptions,
   VocabularyFile,
   VocabularySource,
-} from "@71zone/agent-poisoner-core";
+} from "@71z/agent-poisoner-core";
 export {
   buildDictionary,
   createObfuscator,
@@ -42,9 +42,9 @@ export {
   sentenceToCamelCase,
   toCamelCase,
   toSnakeCase,
-} from "@71zone/agent-poisoner-core";
+} from "@71z/agent-poisoner-core";
 
-const PLUGIN_NAME = "@71zone/vite-plugin-agent-evasion";
+const PLUGIN_NAME = "@71z/vite-agent-poisoner";
 const LOG_PREFIX = `[${PLUGIN_NAME}]`;
 
 /** Matches emitted JavaScript, and nothing else. */
@@ -102,7 +102,7 @@ function createLimiter(max: number): <T>(task: () => Promise<T>) => Promise<T> {
 }
 
 /** The plugin. Pass options to set the vocabulary and evasion settings. */
-export function agentEvasion(options: ObfuscateOptions = {}): Plugin {
+export function agentPoisoner(options: ObfuscateOptions = {}): Plugin {
   const settings = resolveOptions(options);
   const limit = createLimiter(settings.concurrency);
   let config: ResolvedConfig | undefined;
@@ -190,8 +190,10 @@ export function agentEvasion(options: ObfuscateOptions = {}): Plugin {
     },
   };
 }
+/** Backward-compatible alias for `agentPoisoner`. */
+export const agentEvasion = agentPoisoner;
 
-/** Backward-compatible alias for `agentEvasion`. */
-export const obfuscate = agentEvasion;
+/** Backward-compatible alias for `agentPoisoner`. */
+export const obfuscate = agentPoisoner;
 
-export default agentEvasion;
+export default agentPoisoner;

@@ -1,4 +1,4 @@
-# @71zone/agent-poisoner-vocabulary
+# @71z/agent-poisoner-vocabulary
 
 Default adversarial vocabulary for the agent-poisoner packages.
 
@@ -12,17 +12,17 @@ The package holds one file, `vocabulary.yaml`. It contains three sections:
 ## Install
 
 ```sh
-pnpm add -D @71zone/agent-poisoner-vocabulary
+pnpm add -D @71z/agent-poisoner-vocabulary
 ```
 
 ## Use
 
 ```ts
-import { agentEvasion } from "@71zone/vite-plugin-agent-evasion";
-import { vocabularyPath } from "@71zone/agent-poisoner-vocabulary";
+import { agentPoisoner } from "@71z/vite-agent-poisoner";
+import { vocabularyPath } from "@71z/agent-poisoner-vocabulary";
 
 export default {
-  plugins: [agentEvasion({ vocabulary: vocabularyPath })],
+  plugins: [agentPoisoner({ vocabulary: vocabularyPath })],
 };
 ```
 
