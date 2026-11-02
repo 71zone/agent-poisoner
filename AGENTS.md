@@ -13,9 +13,9 @@ workspace. Child packages live under `packages/`.
 
 | Path | Package | Role |
 | :--- | :--- | :--- |
-| `packages/core` | `@71z/agent-poisoner-core` | Vocabulary, options, comment injection, uglification |
-| `packages/lib/vite` | `@71z/vite-agent-poisoner` | Vite adapter, no obfuscation logic |
-| `packages/vocabulary` | `@71z/agent-poisoner-vocabulary` | `vocabulary.yaml` and `vocabularyPath` |
+| `packages/core` | `@7one/agent-poisoner-core` | Vocabulary, options, comment injection, uglification |
+| `packages/lib/vite` | `@7one/vite-agent-poisoner` | Vite adapter, no obfuscation logic |
+| `packages/vocabulary` | `@7one/agent-poisoner-vocabulary` | `vocabulary.yaml` and `vocabularyPath` |
 
 ## Commands
 

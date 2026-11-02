@@ -10,9 +10,9 @@ Built with [Turbo](https://turbo.build) and pnpm workspaces.
 
 | Package | Path | Purpose |
 | :--- | :--- | :--- |
-| `@71z/agent-poisoner-core` | `packages/core` | Build-tool agnostic obfuscation core |
-| `@71z/vite-agent-poisoner` | `packages/lib/vite` | Vite adapter for the core |
-| `@71z/agent-poisoner-vocabulary` | `packages/vocabulary` | Default vocabulary file |
+| `@7one/agent-poisoner-core` | `packages/core` | Build-tool agnostic obfuscation core |
+| `@7one/vite-agent-poisoner` | `packages/lib/vite` | Vite adapter for the core |
+| `@7one/agent-poisoner-vocabulary` | `packages/vocabulary` | Default vocabulary file |
 
 ## Layout
 
@@ -40,12 +40,12 @@ pnpm release patch   # manual NPM release
 ## Use the plugin
 
 ```sh
-pnpm add -D @71z/vite-agent-poisoner
+pnpm add -D @7one/vite-agent-poisoner
 ```
 
 ```ts
 // vite.config.ts
-import { agentPoisoner } from "@71z/vite-agent-poisoner";
+import { agentPoisoner } from "@7one/vite-agent-poisoner";
 import { defineConfig } from "vite";
 
 export default defineConfig({

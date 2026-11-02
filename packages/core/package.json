@@ -1,5 +1,5 @@
 {
-  "name": "@71z/agent-poisoner-core",
+  "name": "@7one/agent-poisoner-core",
   "version": "0.1.0",
   "description": "Build-tool agnostic obfuscation core: adversarial vocabulary, camelCase names, comment injection, and uglification.",
   "license": "MIT",

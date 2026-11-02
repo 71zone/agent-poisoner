@@ -30,10 +30,10 @@ importers:
 
   packages/lib/vite:
     dependencies:
-      '@71z/agent-poisoner-core':
+      '@7one/agent-poisoner-core':
         specifier: workspace:*
         version: link:../../core
-      '@71z/agent-poisoner-vocabulary':
+      '@7one/agent-poisoner-vocabulary':
         specifier: workspace:*
         version: link:../../vocabulary
     devDependencies:

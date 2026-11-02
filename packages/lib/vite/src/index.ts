@@ -4,9 +4,9 @@
  * sentences as function names and code comments.
  *
  * The plugin is a thin adapter: the obfuscation lives in
- * `@71z/agent-poisoner-core`.
+ * `@7one/agent-poisoner-core`.
  */
-import { vocabularyPath } from "@71z/agent-poisoner-vocabulary";
+import { vocabularyPath } from "@7one/agent-poisoner-vocabulary";
 import type { Plugin, ResolvedConfig } from "vite";
 import {
   type ChunkFilter,
@@ -14,7 +14,7 @@ import {
   type ObfuscateOptions,
   createObfuscator,
   resolveOptions,
-} from "@71z/agent-poisoner-core";
+} from "@7one/agent-poisoner-core";
 
 export type {
   CasingStyle,
@@ -26,7 +26,7 @@ export type {
   ResolvedObfuscateOptions,
   VocabularyFile,
   VocabularySource,
-} from "@71z/agent-poisoner-core";
+} from "@7one/agent-poisoner-core";
 export {
   buildDictionary,
   createObfuscator,
@@ -43,9 +43,9 @@ export {
   sentenceToCamelCase,
   toCamelCase,
   toSnakeCase,
-} from "@71z/agent-poisoner-core";
-export { vocabularyPath } from "@71z/agent-poisoner-vocabulary";
-const PLUGIN_NAME = "@71z/vite-agent-poisoner";
+} from "@7one/agent-poisoner-core";
+export { vocabularyPath } from "@7one/agent-poisoner-vocabulary";
+const PLUGIN_NAME = "@7one/vite-agent-poisoner";
 const LOG_PREFIX = `[${PLUGIN_NAME}]`;
 
 /** Matches emitted JavaScript, and nothing else. */

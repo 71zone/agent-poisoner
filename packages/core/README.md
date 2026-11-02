@@ -1,4 +1,4 @@
-# @71z/agent-poisoner-core
+# @7one/agent-poisoner-core
 
 Build-tool agnostic obfuscation core. It turns source code into obfuscated
 source code. Adapters, such as the Vite plugin, only decide when to call it.
@@ -20,13 +20,13 @@ source code. Adapters, such as the Vite plugin, only decide when to call it.
 ## Install
 
 ```sh
-pnpm add @71z/agent-poisoner-core
+pnpm add @7one/agent-poisoner-core
 ```
 
 ## Use
 
 ```ts
-import { createObfuscator } from "@71z/agent-poisoner-core";
+import { createObfuscator } from "@7one/agent-poisoner-core";
 
 const obfuscate = createObfuscator({ vocabulary: "vocabulary.yaml" });
 const bundle = await obfuscate("export const prize = 42;", "app.js");
