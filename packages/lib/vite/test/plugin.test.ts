@@ -140,4 +140,19 @@ describe("obfuscate plugin", () => {
 
     assert.match(code, /computeTotal/);
   });
+  it("obfuscates using default vocabulary when called with no arguments", async () => {
+    await build({
+      root,
+      configFile: false,
+      logLevel: "silent",
+      plugins: [obfuscate()],
+      build: { outDir: "dist-default", emptyOutDir: true },
+    });
+
+    const chunks = await readdir(join(root, "dist-default", "assets"));
+    const file = chunks.find((entry) => entry.endsWith(".js")) as string;
+    const code = await readFile(join(root, "dist-default", "assets", file), "utf8");
+
+    assert.equal(code.includes("carried"), false);
+  });
 });

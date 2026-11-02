@@ -10,22 +10,35 @@ The plugin is a thin adapter. All obfuscation runs in
 ## Install
 
 ```sh
-pnpm add -D @71z/vite-agent-poisoner @71z/agent-poisoner-vocabulary
+pnpm add -D @71z/vite-agent-poisoner
 ```
 
 ## Use
 
+Zero-config with default adversarial vocabulary:
+
 ```ts
 // vite.config.ts
 import { agentPoisoner } from "@71z/vite-agent-poisoner";
-import { vocabularyPath } from "@71z/agent-poisoner-vocabulary";
+import { defineConfig } from "vite";
+
+export default defineConfig({
+  plugins: [agentPoisoner()],
+});
+```
+
+Or pass options to customize:
+
+```ts
+// vite.config.ts
+import { agentPoisoner, vocabularyPath } from "@71z/vite-agent-poisoner";
 import { defineConfig } from "vite";
 
 export default defineConfig({
   plugins: [
     agentPoisoner({
+      // vocabulary defaults to vocabularyPath from @71z/agent-poisoner-vocabulary
       vocabulary: vocabularyPath,
-      // One entry chunk, nothing imports its names: rename top-level functions too.
       obfuscatorOptions: { renameGlobals: true },
     }),
   ],

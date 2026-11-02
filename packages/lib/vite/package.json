@@ -30,7 +30,8 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@71z/agent-poisoner-core": "workspace:*"
+    "@71z/agent-poisoner-core": "workspace:*",
+    "@71z/agent-poisoner-vocabulary": "workspace:*"
   },
   "peerDependencies": {
     "vite": ">=6"

@@ -6,6 +6,7 @@
  * The plugin is a thin adapter: the obfuscation lives in
  * `@71z/agent-poisoner-core`.
  */
+import { vocabularyPath } from "@71z/agent-poisoner-vocabulary";
 import type { Plugin, ResolvedConfig } from "vite";
 import {
   type ChunkFilter,
@@ -43,7 +44,7 @@ export {
   toCamelCase,
   toSnakeCase,
 } from "@71z/agent-poisoner-core";
-
+export { vocabularyPath } from "@71z/agent-poisoner-vocabulary";
 const PLUGIN_NAME = "@71z/vite-agent-poisoner";
 const LOG_PREFIX = `[${PLUGIN_NAME}]`;
 
@@ -103,7 +104,10 @@ function createLimiter(max: number): <T>(task: () => Promise<T>) => Promise<T> {
 
 /** The plugin. Pass options to set the vocabulary and evasion settings. */
 export function agentPoisoner(options: ObfuscateOptions = {}): Plugin {
-  const settings = resolveOptions(options);
+  const settings = resolveOptions({
+    ...options,
+    vocabulary: options.vocabulary ?? vocabularyPath,
+  });
   const limit = createLimiter(settings.concurrency);
   let config: ResolvedConfig | undefined;
   let minifyDisabled = false;
@@ -170,6 +174,7 @@ export function agentPoisoner(options: ObfuscateOptions = {}): Plugin {
 
       core ??= createObfuscator({
         ...options,
+        ...(settings.vocabulary ? { vocabulary: settings.vocabulary } : {}),
         root: config?.root ?? process.cwd(),
         onWarn: (message) => warnSink(message),
       });

@@ -40,17 +40,16 @@ pnpm release patch   # manual NPM release
 ## Use the plugin
 
 ```sh
-pnpm add -D @71z/vite-agent-poisoner @71z/agent-poisoner-vocabulary
+pnpm add -D @71z/vite-agent-poisoner
 ```
 
 ```ts
 // vite.config.ts
 import { agentPoisoner } from "@71z/vite-agent-poisoner";
-import { vocabularyPath } from "@71z/agent-poisoner-vocabulary";
 import { defineConfig } from "vite";
 
 export default defineConfig({
-  plugins: [agentPoisoner({ vocabulary: vocabularyPath })],
+  plugins: [agentPoisoner()],
 });
 ```
 
