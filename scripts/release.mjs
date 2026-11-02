@@ -345,10 +345,12 @@ async function commitAndTag(plan, bump) {
   const paths = plan.map(({ pkg }) => relative(ROOT, pkg.manifestPath));
 
   await runInherit("git", ["add", "--", ...paths], { cwd: ROOT });
-
   const version = plan[0]?.version ?? bump;
-  await runInherit("git", ["commit", "-m", `chore: release v${version}`], { cwd: ROOT });
+  const { stdout: staged } = await run("git", ["diff", "--cached", "--name-only"], { cwd: ROOT });
 
+  if (staged.trim()) {
+    await runInherit("git", ["commit", "-m", `chore: release v${version}`], { cwd: ROOT });
+  }
   for (const { pkg, version } of plan) {
     await runInherit("git", ["tag", `${pkg.name}@${version}`], { cwd: ROOT });
     console.log(`tagged ${pkg.name}@${version}`);
