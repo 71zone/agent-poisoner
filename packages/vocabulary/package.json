@@ -1,6 +1,6 @@
 {
   "name": "@7one/agent-poisoner-vocabulary",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Default adversarial vocabulary for agent-poisoner: words, compound sequences, and sentences.",
   "license": "MIT",
   "type": "module",
