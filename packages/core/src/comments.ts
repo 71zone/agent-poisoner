@@ -1,76 +1,121 @@
 /**
- * Deterministically inject raw sentences as block comments at statement boundaries.
+ * Deterministically inject raw sentences as block comments at token boundaries.
  *
- * Comments are placed at `;` or `}` that are outside of string literals,
- * template literals, and existing comments. The exact sentence string is preserved
- * with no case modification or punctuation changes.
+ * A real JavaScript tokenizer finds the `;` and `}` tokens, so regex literals,
+ * template expressions, strings, and existing comments cannot be mistaken for
+ * statement ends. Every candidate is parsed before it is returned: a result
+ * that does not parse is discarded, and the original code wins.
  */
+import { parse, tokenizer } from "acorn";
 import type { SeededRandom } from "./random.ts";
+
+export interface CommentInjectionOptions {
+  /** Receives a note when comment injection could not produce parsable code. */
+  onWarn?: (message: string) => void;
+}
+
+const MAX_ATTEMPTS = 3;
+
+const PARSE_OPTIONS = {
+  ecmaVersion: "latest",
+  allowHashBang: true,
+  allowAwaitOutsideFunction: true,
+  allowReturnOutsideFunction: true,
+} as const;
+
+const TOKEN_OPTIONS = { ...PARSE_OPTIONS, sourceType: "module" as const };
+
+/** A chunk is safe when either module or script parsing accepts it. */
+function parses(code: string): boolean {
+  for (const sourceType of ["module", "script"] as const) {
+    try {
+      parse(code, { ...PARSE_OPTIONS, sourceType });
+      return true;
+    } catch {
+      // Try the other goal symbol.
+    }
+  }
+
+  return false;
+}
+
+/** One pass over the token stream. Throws when the input cannot be tokenized. */
+function insertOnce(
+  code: string,
+  sentences: readonly string[],
+  random: SeededRandom,
+  probability: number,
+): string {
+  const tokens = tokenizer(code, TOKEN_OPTIONS);
+  const braces: Array<"block" | "template"> = [];
+  let result = "";
+  let copied = 0;
+  let sentenceIndex = 0;
+
+  for (;;) {
+    const token = tokens.getToken();
+
+    if (token.type.label === "eof") {
+      break;
+    }
+
+    result += code.slice(copied, token.end);
+    copied = token.end;
+
+    const label = token.type.label;
+    let isBoundary = label === ";";
+
+    if (label === "{") {
+      braces.push("block");
+    } else if (label === "${") {
+      braces.push("template");
+    } else if (label === "}") {
+      // The `}` that closes `${...}` is followed by template text, so a
+      // comment there would become part of the string. Inner braces are fine.
+      isBoundary = braces.pop() !== "template";
+    }
+
+    if (isBoundary && random.int(100) < probability * 100) {
+      // Keep the sentence on one line and stop it from closing its own comment.
+      const body = (sentences[sentenceIndex % sentences.length] as string)
+        .replace(/\*\//g, "* /")
+        .replace(/[\r\n\u2028\u2029]+/g, " ");
+      sentenceIndex += 1;
+      result += `/* ${body} */`;
+    }
+  }
+
+  return result + code.slice(copied);
+}
 
 export function injectRandomComments(
   code: string,
   sentences: readonly string[],
   random: SeededRandom,
   probability = 0.25,
+  options: CommentInjectionOptions = {},
 ): string {
-  if (!sentences || sentences.length === 0) {
+  if (!sentences || sentences.length === 0 || probability <= 0) {
     return code;
   }
 
-  let result = "";
-  let inSingle = false;
-  let inDouble = false;
-  let inTemplate = false;
-  let inComment = false;
-  let inBlockComment = false;
-  let sentenceIndex = 0;
+  for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt += 1) {
+    let candidate: string;
 
-  for (let index = 0; index < code.length; index += 1) {
-    const char = code[index] as string;
-    const prev = index > 0 ? (code[index - 1] as string) : "";
-    const next = index < code.length - 1 ? (code[index + 1] as string) : "";
-
-    // Escape character handling
-    if (prev === "\\") {
-      result += char;
-      continue;
+    try {
+      candidate = insertOnce(code, sentences, random, probability);
+    } catch {
+      break;
     }
 
-    // Single-line comment: // ... \n
-    if (char === "/" && next === "/" && !inSingle && !inDouble && !inTemplate && !inBlockComment) {
-      inComment = true;
-    } else if (char === "\n" && inComment) {
-      inComment = false;
-    }
-
-    // Block comment: /* ... */
-    if (char === "/" && next === "*" && !inSingle && !inDouble && !inTemplate && !inComment) {
-      inBlockComment = true;
-    } else if (char === "*" && next === "/" && inBlockComment) {
-      inBlockComment = false;
-    }
-
-    // Strings
-    if (char === "'" && !inDouble && !inTemplate && !inComment && !inBlockComment) {
-      inSingle = !inSingle;
-    } else if (char === '"' && !inSingle && !inTemplate && !inComment && !inBlockComment) {
-      inDouble = !inDouble;
-    } else if (char === "`" && !inSingle && !inDouble && !inComment && !inBlockComment) {
-      inTemplate = !inTemplate;
-    }
-
-    result += char;
-
-    const isOutside = !inSingle && !inDouble && !inTemplate && !inComment && !inBlockComment;
-
-    if (isOutside && (char === ";" || char === "}") && random.int(100) < probability * 100) {
-      const raw = sentences[sentenceIndex % sentences.length] as string;
-      sentenceIndex += 1;
-      // Sanitize */ to prevent premature comment closure
-      const safeComment = raw.replace(/\*\//g, "* /");
-      result += `/* ${safeComment} */`;
+    if (parses(candidate)) {
+      return candidate;
     }
   }
 
-  return result;
+  options.onWarn?.(
+    `comment injection skipped: ${MAX_ATTEMPTS} attempts did not produce parsable code`,
+  );
+
+  return code;
 }

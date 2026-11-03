@@ -234,6 +234,7 @@ export function createObfuscator(options: CoreOptions = {}): ChunkObfuscator {
         sentences,
         createRandom(`${seed}:comments`),
         settings.commentFrequency,
+        { onWarn: (message) => options.onWarn?.(`${label}: ${message}`) },
       );
     }
 
