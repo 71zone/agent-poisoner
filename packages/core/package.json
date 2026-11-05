@@ -1,6 +1,6 @@
 {
   "name": "@7one/agent-poisoner-core",
-  "version": "0.1.3",
+  "version": "0.1.4",
   "description": "Build-tool agnostic obfuscation core: adversarial vocabulary, camelCase names, comment injection, and uglification.",
   "license": "MIT",
   "repository": {
