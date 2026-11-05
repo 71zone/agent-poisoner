@@ -1,6 +1,9 @@
 # @7one/agent-poisoner-vocabulary
 
-[![npm version](https://img.shields.io/npm/v/@7one/agent-poisoner-vocabulary.svg)](https://www.npmjs.com/package/@7one/agent-poisoner-vocabulary)
+[![npm version](https://img.shields.io/npm/v/@7one/agent-poisoner-vocabulary?style=flat-square)](https://www.npmjs.com/package/@7one/agent-poisoner-vocabulary)
+[![npm downloads](https://img.shields.io/npm/dm/@7one/agent-poisoner-vocabulary?style=flat-square)](https://www.npmjs.com/package/@7one/agent-poisoner-vocabulary)
+[![license](https://img.shields.io/npm/l/@7one/agent-poisoner-vocabulary?style=flat-square)](https://github.com/71zone/agent-poisoner/blob/main/LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/71zone/agent-poisoner?style=flat-square)](https://github.com/71zone/agent-poisoner/stargazers)
 
 Default adversarial vocabulary for the agent-poisoner packages.
 

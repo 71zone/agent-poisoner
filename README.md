@@ -1,5 +1,10 @@
 # 71z-agent-poisoner
 
+[![npm version](https://img.shields.io/npm/v/@7one/vite-agent-poisoner?style=flat-square&label=npm)](https://www.npmjs.com/package/@7one/vite-agent-poisoner)
+[![npm downloads](https://img.shields.io/npm/dm/@7one/vite-agent-poisoner?style=flat-square)](https://www.npmjs.com/package/@7one/vite-agent-poisoner)
+[![license](https://img.shields.io/npm/l/@7one/vite-agent-poisoner?style=flat-square)](LICENSE)
+[![GitHub stars](https://img.shields.io/github/stars/71zone/agent-poisoner?style=flat-square)](https://github.com/71zone/agent-poisoner/stargazers)
+
 Monorepo for LLM agent evasion tooling. The packages poison build output:
 identifier names come from an adversarial vocabulary, numbers become arithmetic
 expressions, and sentences appear as function names and code comments.
