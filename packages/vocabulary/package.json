@@ -3,6 +3,15 @@
   "version": "0.1.2",
   "description": "Default adversarial vocabulary for agent-poisoner: words, compound sequences, and sentences.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/71zone/agent-poisoner.git",
+    "directory": "packages/vocabulary"
+  },
+  "homepage": "https://github.com/71zone/agent-poisoner/tree/main/packages/vocabulary#readme",
+  "bugs": {
+    "url": "https://github.com/71zone/agent-poisoner/issues"
+  },
   "type": "module",
   "engines": {
     "node": ">=24"

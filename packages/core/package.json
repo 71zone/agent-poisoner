@@ -3,6 +3,15 @@
   "version": "0.1.2",
   "description": "Build-tool agnostic obfuscation core: adversarial vocabulary, camelCase names, comment injection, and uglification.",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/71zone/agent-poisoner.git",
+    "directory": "packages/core"
+  },
+  "homepage": "https://github.com/71zone/agent-poisoner/tree/main/packages/core#readme",
+  "bugs": {
+    "url": "https://github.com/71zone/agent-poisoner/issues"
+  },
   "type": "module",
   "engines": {
     "node": ">=24"
