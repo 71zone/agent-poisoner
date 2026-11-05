@@ -1,5 +1,7 @@
 # @7one/vite-agent-poisoner
 
+[![npm version](https://img.shields.io/npm/v/@7one/vite-agent-poisoner.svg)](https://www.npmjs.com/package/@7one/vite-agent-poisoner)
+
 Vite plugin for LLM agent evasion. It obfuscates emitted chunks with an
 adversarial vocabulary, uglifies expressions, and injects sentences as function
 names and code comments.

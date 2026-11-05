@@ -1,5 +1,7 @@
 # @7one/agent-poisoner-core
 
+[![npm version](https://img.shields.io/npm/v/@7one/agent-poisoner-core.svg)](https://www.npmjs.com/package/@7one/agent-poisoner-core)
+
 Build-tool agnostic obfuscation core. It turns source code into obfuscated
 source code. Adapters, such as the Vite plugin, only decide when to call it.
 

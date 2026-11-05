@@ -8,11 +8,11 @@ Built with [Turbo](https://turbo.build) and pnpm workspaces.
 
 ## Packages
 
-| Package | Path | Purpose |
-| :--- | :--- | :--- |
-| `@7one/agent-poisoner-core` | `packages/core` | Build-tool agnostic obfuscation core |
-| `@7one/vite-agent-poisoner` | `packages/lib/vite` | Vite adapter for the core |
-| `@7one/agent-poisoner-vocabulary` | `packages/vocabulary` | Default vocabulary file |
+| Package | NPM | Path | Purpose |
+| :--- | :--- | :--- | :--- |
+| `@7one/agent-poisoner-core` | [npm](https://www.npmjs.com/package/@7one/agent-poisoner-core) | `packages/core` | Build-tool agnostic obfuscation core |
+| `@7one/vite-agent-poisoner` | [npm](https://www.npmjs.com/package/@7one/vite-agent-poisoner) | `packages/lib/vite` | Vite adapter for the core |
+| `@7one/agent-poisoner-vocabulary` | [npm](https://www.npmjs.com/package/@7one/agent-poisoner-vocabulary) | `packages/vocabulary` | Default vocabulary file |
 
 ## Layout
 

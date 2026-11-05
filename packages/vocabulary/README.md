@@ -1,5 +1,7 @@
 # @7one/agent-poisoner-vocabulary
 
+[![npm version](https://img.shields.io/npm/v/@7one/agent-poisoner-vocabulary.svg)](https://www.npmjs.com/package/@7one/agent-poisoner-vocabulary)
+
 Default adversarial vocabulary for the agent-poisoner packages.
 
 The package holds one file, `vocabulary.yaml`. It contains three sections:
